@@ -292,8 +292,14 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
   bag.open(bag_fname, rosbag::bagmode::Read);
   
   std::vector<std::string> topics;
-  topics.push_back(std::string("/tf"));
-  topics.push_back(scan_topic);
+
+  ///////////////////////////////////////////////
+  // modified to only accept tf and scan topics
+  topics.push_back(std::string("tf"));
+  topics.push_back(std::string("scan"));
+
+  ///////////////////////////////////////////////
+
   rosbag::View viewall(bag, rosbag::TopicQuery(topics));
 
   // Store up to 5 messages and there error message (if they cannot be processed right away)

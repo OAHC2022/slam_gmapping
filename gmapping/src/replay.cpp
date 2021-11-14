@@ -21,6 +21,20 @@
 
 #include <boost/program_options.hpp>
 #include <ros/ros.h>
+#include <chrono>
+
+#include <sys/resource.h>
+
+int get_my_r_usage(){
+    /**
+     * @brief get memory usage
+     * 
+     */
+    struct rusage myrusage;
+    getrusage(RUSAGE_SELF, & myrusage);
+    return myrusage.ru_maxrss;
+}
+
 
 int
 main(int argc, char** argv)
@@ -69,7 +83,25 @@ main(int argc, char** argv)
     
     ros::init(argc, argv, "slam_gmapping");
     SlamGMapping gn(seed, max_duration_buffer) ;
+    
+    ////////////////////////////////////////////
+    // profile start
+
+    auto start = std::chrono::steady_clock::now();
+    long base_mem = get_my_r_usage();
+    std::cout << "base mem: " << base_mem << " byte\n";
+    
     gn.startReplay(bag_fname, scan_topic);
+    
+    auto end = std::chrono::steady_clock::now();
+    long total_mem = get_my_r_usage();
+    std::chrono::duration<double> elapsed_seconds = end-start;
+    std::cout << "elapsed time: " << elapsed_seconds.count() << "s\n";
+    std::cout << "R mem: " << total_mem - base_mem << " byte\n";
+    
+    // profile end
+    ////////////////////////////////////////////
+
     ROS_INFO("replay stopped.");
 
     if ( vm.count("on_done") )
